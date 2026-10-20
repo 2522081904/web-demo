@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>页面跳转中…</title>
+    <script>
+      // GitHub Pages 静态托管下的 history 模式兜底。
+      //
+      // 静态服务器上不存在 /仓库名/projects/detail/1 这样的路径，
+      // 直接访问或刷新时会返回 404，Pages 会用本站的 404.html 响应。
+      // 这里把地址栏里的路径还原成带 # 的 hash 地址再跳转，
+      // 交由前端路由接管，用户看到的仍然是原来的页面。
+      //
+      // 段数 = 仓库名占用的层级（项目站点为 1），
+      // 因为 base 是 /<repo>/，所以保留第一段、其余部分转成 hash。
+      ;(function () {
+        var segmentCount = 1
+        var location = window.location
+        var parts = location.pathname.split('/').filter(Boolean)
+
+        // 仓库名之后的部分就是应用内的路由路径
+        var appPath = parts.slice(segmentCount).join('/')
+
+        // 保留查询参数（例如登录跳转的 ?redirect=...）
+        var query = location.search ? location.search : ''
+
+        var base = '/' + parts.slice(0, segmentCount).join('/') + '/'
+        var target = base + '#' + '/' + appPath + query
+
+        // replace 避免在历史记录里留下这次跳转
+        location.replace(target)
+      })()
+    </script>
+  </head>
+  <body>
+    <p>正在跳转，如果浏览器没有自动跳转，请<a href="/">点击这里返回首页</a>。</p>
+  </body>
+</html>

@@ -1,0 +1,174 @@
+// 文章种子数据：结构与项目数据类似，额外增加了标签、分类、发布状态与阅读量
+export const seedArticles = [
+  {
+    id: 1,
+    title: '从 reactive 到 Pinia：一次状态管理的重构记录',
+    category: '项目复盘',
+    date: '2026-10-08',
+    tags: ['Pinia', 'Vue 3', '重构'],
+    views: 128,
+    published: true,
+    summary:
+      '实验三用模块级 reactive 对象模拟仓库，能跑通但存在三个问题，这次逐一分析并改造成标准 Pinia Store。',
+    content: `实验三里我用一个模块级的 reactive 对象加几个函数，模拟出了「全局状态仓库」。它能用，但在准备实验四时暴露出三个问题。
+
+第一，状态的修改入口不唯一。任何一个组件导入这个对象后都可以直接 state.user = xxx，绕过了 login()。Pinia 把 state、getters、actions 放在同一个工厂函数里，虽然 state 依然是响应式对象，但团队约定上 actions 才是唯一推荐入口。
+
+第二，DevTools 看不到数据流。模块级对象不会被 Pinia 注册，Vue DevTools 的 Pinia 面板里是空的，调试时只能 console.log。换成 defineStore 之后，每次 action 调用都会在时间轴里留下记录，状态快照可以逐帧回放。
+
+第三，计算属性每次调用都要重新创建。原来我把 computed 写在 useXxxStore() 里，每次调用这个函数都会生成一批新的计算属性。Pinia 的 getters 是定义在 store 实例上的，只会创建一次，缓存特性才真正发挥作用。
+
+改造之后的写法是：用 defineStore('projects', () => { ... }) 定义 setup store，state 用 ref、getters 用 computed、actions 用普通函数，最后 return 出去。组件里用 storeToRefs 解构 state 和 getters 保持响应式，actions 直接解构即可。`,
+  },
+  {
+    id: 2,
+    title: 'storeToRefs 到底解决了什么问题',
+    category: '学习笔记',
+    date: '2026-09-28',
+    tags: ['Pinia', '响应式'],
+    views: 96,
+    published: true,
+    summary:
+      '直接解构 Store 会丢响应式，这是 Pinia 最容易踩的坑。本文用一段可复现的代码说明原因与两种正确写法。',
+    content: `先看一段会出问题的代码：
+
+const store = useProjectsStore()
+const { list, total } = store
+
+这样写完之后，list 只是一个普通的数组，total 只是一个普通的数字。之后 store.list 变了，模板里的 list 不会更新。
+
+原因是解构本质上是一次取值操作，取到的是当时那个值本身，而不是「指向这个值的引用」。Vue 的响应式依赖收集发生在属性访问的那一刻，解构之后就绕过了这个访问过程。
+
+两种正确写法：
+
+第一种是保留前缀不解构，模板里直接写 store.list、store.total。最省事，缺点是模板里到处是 store. 前缀。
+
+第二种是用 storeToRefs 把 state 和 getters 包装成 ref：
+
+const { list, total } = storeToRefs(store)
+const { addProject } = store
+
+注意 storeToRefs 只处理 state 和 getters。actions 是普通函数，本来就没有响应式可言，直接从 store 上解构就行，硬套 storeToRefs 反而会被警告。
+
+还有一种情况容易被忽略：把整个 store 通过 provide 传下去，子组件里再解构，同样会丢响应式。要么传 storeToRefs 的结果，要么在子组件里重新调用 useXxxStore()。`,
+  },
+  {
+    id: 3,
+    title: 'localStorage 持久化的三个坑',
+    category: '学习笔记',
+    date: '2026-09-15',
+    tags: ['localStorage', '持久化'],
+    views: 74,
+    published: true,
+    summary:
+      'JSON 解析失败、字段新增后旧数据不兼容、隐私模式写入异常——手工实现持久化时要处理的三件事。',
+    content: `Pinia 本身不做持久化，页面一刷新 state 就回到初始值。手工实现的思路很简单：初始化时读、修改后写。但真写起来有三个坑。
+
+第一个坑是 JSON 解析失败。用户可能在 DevTools 里手动改过 localStorage，或者被别的脚本写坏了。JSON.parse 抛异常会直接让 Store 初始化失败，整个页面白屏。所以读取一定要包在 try/catch 里，失败就返回默认值。
+
+第二个坑是字段新增后旧数据不兼容。今天存了 { name, email }，明天代码里要用 motto，旧数据里没有这个字段，页面上就渲染出 undefined。解决办法是读取时用默认值对象做一次展开合并：{ ...defaults, ...saved }。这样旧数据缺的字段会被补上，新增字段不需要用户清缓存。
+
+第三个坑是写入本身可能失败。浏览器的隐私模式、存储配额写满，setItem 都会抛异常。持久化失败不应该影响当前会话的使用，所以写入操作同样要包 try/catch，失败就静默忽略。
+
+把这三个处理抽成一个 persist.js，各个 Store 共用，代码量反而比每个 Store 各写一遍更少。`,
+  },
+  {
+    id: 4,
+    title: 'Element Plus 组件在个人主页里的分工',
+    category: '项目复盘',
+    date: '2026-10-12',
+    tags: ['Element Plus', 'UI'],
+    views: 52,
+    published: true,
+    summary:
+      '布局、导航、数据展示、表单、反馈五类组件分别解决了什么问题，以及为什么没有全站替换成组件库。',
+    content: `这次重构用了十几类 Element Plus 组件，按用途可以分成五组。
+
+布局组：el-container / el-header / el-aside / el-main / el-footer 把整站拆成顶部导航加主体加页脚，后台管理页则用 el-aside 做侧边菜单。这一组的价值是省掉自己写 flex 布局和响应式断点。
+
+导航组：el-menu 做主导航，支持 horizontal 与 vertical 两种模式，路由模式下选中项会自动跟着地址走。el-breadcrumb 做面包屑，直接从 route.matched 生成。
+
+数据展示组：el-card 做卡片容器，el-table 做后台的项目与文章表格，el-timeline 展示学习经历，el-progress 展示技能自评，el-tag 展示技术栈与文章标签，el-avatar 展示头像，el-statistic 展示统计数字，el-empty 处理空数据。
+
+表单组：el-form 配合 el-form-item 的 rules 做校验，比手写错误提示简洁得多；el-dialog 承载新增与编辑弹窗；el-select、el-input、el-input-number、el-switch、el-date-picker 提供输入控件。
+
+反馈组：ElMessage 做轻提示，ElMessageBox 做删除二次确认，el-alert 做页面级通知，el-skeleton 做加载占位。
+
+有一点需要注意：组件库解决的是通用交互，不是全部样式。首页 Hero 区那种需要精细排版的地方我保留了自定义样式，只在内部用 el-button、el-tag 这类原子组件。全部替换反而会让页面对组件库的默认视觉产生强依赖，改起来更麻烦。`,
+  },
+  {
+    id: 5,
+    title: '路由守卫里调用 Store 的正确位置',
+    category: '学习笔记',
+    date: '2026-09-05',
+    tags: ['Vue Router', 'Pinia', '路由守卫'],
+    views: 88,
+    published: true,
+    summary:
+      'useAuthStore 不能在模块顶层调用，必须放进守卫函数内部。原因与 Pinia 的安装时机有关。',
+    content: `改造登录校验时遇到一个报错：getActivePinia() was called but there was no active Pinia。代码是把 useAuthStore() 写在了 router/index.js 的模块顶层。
+
+原因是模块的执行顺序。router/index.js 在 main.js 里被 import，此时 createApp() 还没执行，app.use(pinia) 自然也没执行。而 useXxxStore() 内部需要拿到当前激活的 Pinia 实例，实例不存在就报错。
+
+正确做法是把调用挪进守卫函数体内部：
+
+router.beforeEach((to) => {
+  const auth = useAuthStore()
+  if (to.meta.requiresAuth && !auth.isLogged) {
+    return { name: 'login', query: { redirect: to.fullPath } }
+  }
+})
+
+守卫是导航发生时才执行的，那时 Pinia 早已安装完毕。而且 useAuthStore() 本身有缓存，重复调用不会重复创建实例，放在守卫里没有任何性能问题。
+
+另外要注意 Pinia 的安装顺序必须在 router 之前：
+
+app.use(createPinia())
+app.use(router)
+
+如果顺序反过来，首次导航的守卫执行时 Pinia 还没装上，同样会报错。`,
+  },
+  {
+    id: 6,
+    title: 'GitHub Pages 部署踩坑记录',
+    category: '工具分享',
+    date: '2026-10-14',
+    tags: ['部署', 'GitHub Actions', 'CI'],
+    views: 41,
+    published: true,
+    summary:
+      'base 路径没配导致资源 404、history 模式子路由刷新 404、Pages 的 Source 忘记改成 GitHub Actions。',
+    content: `项目部署到 GitHub Pages 后有三次打不开，记录一下原因。
+
+第一次是白屏，控制台一堆 404。原因是 Vite 默认把资源路径写成绝对路径 /assets/xxx.js，但 GitHub Pages 的项目站点地址是 https://用户名.github.io/仓库名/，资源实际在 /仓库名/assets/ 下面。解决办法是在 vite.config.js 里设置 base: '/仓库名/'。用 Actions 部署时也可以设成 './' 走相对路径。
+
+第二次是首页正常，但点进项目详情再刷新就 404。这是 history 模式的固有问题：地址栏是 /仓库名/projects/detail/1，服务器上并不存在这个路径，GitHub Pages 只能返回 404。两种处理方式：换成 hash 模式（地址变成 /#/projects/detail/1），或者在 public 目录放一个 404.html 做重定向。我两种都做了，页面上保留了模式切换开关，方便对比。
+
+第三次是工作流一直不执行。原因是仓库 Settings 里的 Pages Source 还停留在 Deploy from a branch，需要手动改成 GitHub Actions，deploy-pages 这个 action 才有权限发布。
+
+顺带一提，工作流里的 permissions 不能省：contents: read 用于拉代码，pages: write 用于发布，id-token: write 用于 OIDC 认证。少了任何一个都会在部署那一步失败。`,
+  },
+  {
+    id: 7,
+    title: '草稿：组件库按需引入的配置笔记',
+    category: '工具分享',
+    date: '2026-10-15',
+    tags: ['Element Plus', '构建优化'],
+    views: 0,
+    published: false,
+    summary:
+      '全局注册会把整个组件库打进产物，按需引入借助两个 unplugin 插件在构建期自动分析。这篇还没写完。',
+    content: `全局引入的写法是在 main.js 里 app.use(ElementPlus) 并引入全部样式，好处是所有组件随取随用，代价是打包体积明显变大。
+
+按需引入需要两个插件：unplugin-vue-components 负责自动导入模板里用到的组件，unplugin-auto-import 负责自动导入 ElMessage、ElMessageBox 这类以函数形式调用的 API，同时它们会自动引入对应的样式。
+
+配置要点是给两个插件都加上 ElementPlusResolver：
+
+Components({ resolvers: [ElementPlusResolver()] })
+AutoImport({ resolvers: [ElementPlusResolver()] })
+
+注意 ElMessage 这类函数的样式需要额外处理，有时候要配合 importStyle 参数。
+
+实验阶段还是用全局注册，逻辑简单、不容易出错。这篇笔记等我把按需引入的产物体积对比实测出来之后再补完。`,
+  },
+]

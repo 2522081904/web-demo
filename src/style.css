@@ -1,0 +1,229 @@
+/* 全局基础样式：重置、主题变量、Element Plus 变量覆盖、通用卡片 / 布局辅助类 */
+
+:root {
+  --c-bg: #f4f6fa;
+  --c-panel: #ffffff;
+  --c-text: #1f2937;
+  --c-text-soft: #5b6472;
+  --c-border: #e3e8ef;
+  --c-primary: #42b883;
+  --c-primary-dark: #369a6d;
+  --c-accent: #6a5acd;
+  --c-danger: #e5534b;
+  --c-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+
+  /* 把品牌色注入 Element Plus 的主色变量，
+     这样 el-button、el-menu、el-timeline 等组件的高亮色与整站配色一致 */
+  --el-color-primary: #42b883;
+  --el-color-primary-light-3: #6ec9a1;
+  --el-color-primary-light-5: #93d7ba;
+  --el-color-primary-light-7: #b9e5d2;
+  --el-color-primary-light-8: #ccecdf;
+  --el-color-primary-light-9: #e5f5ee;
+  --el-color-primary-dark-2: #369a6d;
+  --el-font-family: 'Microsoft YaHei', 'PingFang SC', 'Helvetica Neue', sans-serif;
+  --el-border-radius-base: 8px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--el-font-family);
+  background: var(--c-bg);
+  color: var(--c-text);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 暗色主题：通过 body 上的 dark 类切换全局配色变量。
+   除了自定义变量，同时覆盖 Element Plus 的背景与文字变量，
+   否则组件库的卡片、表格会保持亮色，和页面其它部分割裂。 */
+body.dark {
+  --c-bg: #10151f;
+  --c-panel: #18202e;
+  --c-text: #e6ebf2;
+  --c-text-soft: #a6b0c0;
+  --c-border: #2a3444;
+  --c-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+
+  --el-bg-color: #18202e;
+  --el-bg-color-overlay: #1d2634;
+  --el-bg-color-page: #10151f;
+  --el-text-color-primary: #e6ebf2;
+  --el-text-color-regular: #c3ccda;
+  --el-text-color-secondary: #a6b0c0;
+  --el-text-color-placeholder: #7c8798;
+  --el-border-color: #2a3444;
+  --el-border-color-light: #2a3444;
+  --el-border-color-lighter: #232d3c;
+  --el-fill-color-blank: #18202e;
+  --el-fill-color-light: #1f2836;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+a {
+  color: var(--c-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* ---------- 通用卡片容器（保留实验三的自定义样式，与 el-card 并存） ---------- */
+.card {
+  background: var(--c-panel);
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  padding: 22px 24px;
+  box-shadow: var(--c-shadow);
+  margin-bottom: 20px;
+}
+
+.card-title {
+  font-size: 19px;
+  margin-bottom: 6px;
+}
+
+.card-desc {
+  color: var(--c-text-soft);
+  font-size: 14px;
+}
+
+.muted {
+  color: var(--c-text-soft);
+  font-size: 13px;
+}
+
+/* ---------- 布局辅助类 ---------- */
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+/* ---------- 统计数字块：首页、统计页、后台概览共用 ---------- */
+.stat-cell {
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  padding: 14px 10px;
+  text-align: center;
+  background: var(--c-panel);
+}
+
+.stat-cell strong {
+  display: block;
+  font-size: 24px;
+  line-height: 1.2;
+  color: var(--c-primary-dark);
+}
+
+.stat-cell span {
+  font-size: 12px;
+  color: var(--c-text-soft);
+}
+
+/* ---------- 项目 / 文章状态徽章（实验三遗留的自定义类，仍在部分位置使用） ---------- */
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.badge-已完成 {
+  background: #2e7d32;
+}
+
+.badge-进行中 {
+  background: #2980b9;
+}
+
+.badge-计划中 {
+  background: #e67e22;
+}
+
+/* ---------- 路由出口淡入动画 ---------- */
+.fade-enter-active {
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s ease;
+}
+
+.fade-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+/* ---------- 深色模式下修正 Element Plus 组件内文字对比度 ---------- */
+body.dark .el-card,
+body.dark .el-table,
+body.dark .el-table tr,
+body.dark .el-table th.el-table__cell {
+  background-color: var(--el-bg-color);
+  color: var(--el-text-color-primary);
+}
+
+body.dark .el-table--border,
+body.dark .el-table td.el-table__cell,
+body.dark .el-table th.el-table__cell.is-leaf {
+  border-color: var(--el-border-color);
+}
+
+body.dark .el-table__body tr:hover > td.el-table__cell {
+  background-color: var(--el-fill-color-light);
+}
+
+body.dark .el-timeline-item__content,
+body.dark .el-timeline-item__timestamp {
+  color: var(--el-text-color-regular);
+}
+
+body.dark .el-menu {
+  background-color: transparent;
+}
+
+/* 分页组件在深色下的选中态 */
+body.dark .el-pagination.is-background .el-pager li {
+  background-color: var(--el-fill-color-light);
+  color: var(--el-text-color-regular);
+}
+
+body.dark .el-pagination.is-background .el-pager li.is-active {
+  background-color: var(--el-color-primary);
+  color: #fff;
+}
+
+/* 描述列表在深色下的标签底色 */
+body.dark .el-descriptions__body {
+  background-color: var(--el-bg-color);
+}
+
+body.dark .el-descriptions__label.el-descriptions__cell.is-bordered-label {
+  background-color: var(--el-fill-color-light);
+}
