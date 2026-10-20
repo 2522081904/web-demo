@@ -5,30 +5,19 @@ import { defineConfig } from 'vite'
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
-  // GitHub Pages 的项目站点地址形如 https://<username>.github.io/<repo-name>/，
-  // 资源必须带上仓库名前缀才能被正确加载，否则会出现白屏 + 一堆 404。
-  //
-  // 这里用环境变量控制，避免把仓库名写死在代码里：
-  //   本地开发 / 预览      -> base 为 '/'
-  //   GitHub Actions 构建  -> 由工作流注入 VITE_BASE_PATH=/<repo-name>/
-  //
-  // 注意 Vite 的 base 必须以斜杠开头和结尾。
-  base: process.env.VITE_BASE_PATH || '/',
-
-  plugins: [vue(), vueDevTools()],
+  // GitHub Pages仓库web‑demo，固定 base，前后斜杠必须保留
   base: '/web-demo/',
+  plugins: [vue(), vueDevTools()],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
-
   server: {
     // 开发服务器可访问局域网地址，便于在手机浏览器上验证 Hash / History 两种模式
     host: true,
     port: 5173,
   },
-
   build: {
     // Element Plus 全局注册后体积较大，这里做基础的手工分包：
     // 把组件库、Vue 运行时与业务代码拆开，利用浏览器缓存，
