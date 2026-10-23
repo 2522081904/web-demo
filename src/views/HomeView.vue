@@ -6,7 +6,7 @@
 //   projects —— 项目数量与高分项目
 //   articles —— 最新文章与总阅读量
 // 所有数据都通过 storeToRefs 解构，保持响应式。
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useProfileStore } from '../stores/profile'
@@ -28,6 +28,12 @@ const { latest, totalViews, publishedCount } = storeToRefs(articlesStore)
 
 const auth = useAuthStore()
 const { isLogged, displayName } = storeToRefs(auth)
+
+// 首次进入时从后端接口加载项目与文章数据（数据来源：MySQL）
+onMounted(() => {
+  projectsStore.fetchProjects()
+  articlesStore.fetchArticles()
+})
 
 // 首页展示评分最高的 3 个项目
 const featured = computed(() => topProjects.value.slice(0, 3))

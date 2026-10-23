@@ -4,7 +4,7 @@
 // 与前台的差异集中体现在 published 字段上：
 //   前台文章列表只读取 publishedList（getter 过滤后的结果），
 //   后台读取完整的 list，因此草稿只在这里可见。
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -15,6 +15,10 @@ const router = useRouter()
 
 const store = useArticlesStore()
 const { list, total, publishedCount, draftCount, allTags } = storeToRefs(store)
+
+onMounted(() => {
+  store.fetchArticles()
+})
 
 const ui = useUiStore()
 
@@ -117,7 +121,7 @@ async function handleSubmit() {
     }
 
     if (editingId.value) {
-      store.updateArticle(editingId.value, payload)
+      await store.updateArticle(editingId.value, payload)
       ui.pushNotice({
         text: `文章「${payload.title}」已更新`,
         type: 'success',
@@ -125,7 +129,7 @@ async function handleSubmit() {
       })
       ElMessage.success('文章已更新')
     } else {
-      const id = store.addArticle(payload)
+      const id = await store.addArticle(payload)
       ui.pushNotice({
         text: `文章「${payload.title}」已新增，编号 #${id}`,
         type: 'success',
@@ -151,7 +155,7 @@ async function handleRemove(row) {
     return
   }
 
-  store.removeArticle(row.id)
+  await store.removeArticle(row.id)
   ui.pushNotice({ text: `已删除文章「${row.title}」`, type: 'warning', source: '文章管理页' })
   ElMessage.success('文章已删除')
 }
@@ -172,16 +176,17 @@ async function handleBatchRemove() {
     return
   }
 
-  const count = store.removeArticles(selectedRows.value.map((row) => row.id))
+  const count = await store.removeArticles(selectedRows.value.map((row) => row.id))
   selectedRows.value = []
   ui.pushNotice({ text: `批量删除了 ${count} 篇文章`, type: 'warning', source: '文章管理页' })
   ElMessage.success(`已删除 ${count} 篇文章`)
 }
 
 /** 一键切换发布状态：action 内部改 state 并持久化 */
-function handleTogglePublish(row) {
-  store.togglePublished(row.id)
-  const text = row.published
+async function handleTogglePublish(row) {
+  const willPublish = !row.published
+  await store.togglePublished(row.id)
+  const text = willPublish
     ? `文章「${row.title}」已重新发布到前台`
     : `文章「${row.title}」已下架为草稿`
   ui.pushNotice({ text, type: 'info', source: '文章管理页' })
@@ -190,7 +195,7 @@ function handleTogglePublish(row) {
 
 async function handleReset() {
   try {
-    await ElMessageBox.confirm('将清除本地保存的文章数据，恢复为初始记录。', '确认恢复？', {
+    await ElMessageBox.confirm('将从服务器重新加载文章数据（不会删除数据库记录）。', '确认刷新？', {
       confirmButtonText: '恢复',
       cancelButtonText: '取消',
       type: 'warning',
@@ -199,10 +204,10 @@ async function handleReset() {
     return
   }
 
-  store.resetArticles()
+  await store.resetArticles()
   selectedRows.value = []
-  ui.pushNotice({ text: '文章数据已恢复初始值', type: 'info', source: '文章管理页' })
-  ElMessage.info('已恢复初始文章数据')
+  ui.pushNotice({ text: '文章数据已从服务器刷新', type: 'info', source: '文章管理页' })
+  ElMessage.info('文章数据已刷新')
 }
 </script>
 
@@ -219,7 +224,7 @@ async function handleReset() {
       </el-button>
 
       <el-button @click="handleReset">
-        <el-icon><RefreshLeft /></el-icon>&nbsp;恢复初始数据
+        <el-icon><RefreshLeft /></el-icon>&nbsp;刷新数据
       </el-button>
 
       <el-input v-model="keyword" placeholder="按标题搜索" clearable class="search">

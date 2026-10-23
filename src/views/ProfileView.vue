@@ -16,7 +16,7 @@
 //   el-alert         提示
 //
 // 所有数据来自 profile Store，后台「修改简介」保存后本页立即同步。
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useProfileStore } from '../stores/profile'
@@ -34,6 +34,11 @@ const { total, finishedCount } = storeToRefs(projectsStore)
 
 const articlesStore = useArticlesStore()
 const { publishedCount } = storeToRefs(articlesStore)
+
+onMounted(() => {
+  projectsStore.fetchProjects()
+  articlesStore.fetchArticles()
+})
 
 // 时间线按年份倒序展示：最近的经历放在最上面
 const sortedTimeline = computed(() =>

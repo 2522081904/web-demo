@@ -75,7 +75,8 @@ watch(
 )
 
 // 无效地址处理：给出提示后回到文章列表
-onMounted(() => {
+onMounted(async () => {
+  await store.fetchArticles()
   if (!article.value) {
     ElMessage.warning('未找到该文章，正在返回文章列表')
     router.replace({ name: 'articles' })

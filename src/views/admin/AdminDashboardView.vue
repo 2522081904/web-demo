@@ -2,7 +2,7 @@
 // 后台概览：/admin 的默认子路由。
 // 汇总项目、文章、用户三个 Store 的数据，并展示 UI Store 记录的提示历史——
 // 这一页是「多个 Store 协同工作」最直观的体现。
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -30,6 +30,11 @@ const { info: profile, avgSkillLevel, timelineCount } = storeToRefs(profileStore
 
 const ui = useUiStore()
 const { history, isDark } = storeToRefs(ui)
+
+onMounted(() => {
+  projectsStore.fetchProjects()
+  articlesStore.fetchArticles()
+})
 
 // 管理入口
 const entries = [

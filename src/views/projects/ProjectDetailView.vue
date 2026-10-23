@@ -2,7 +2,7 @@
 // 项目详情：动态路由 detail/:id 的路由组件。
 // 路由表配置了 props: true，因此路由参数 id 会自动作为 props 传入，
 // 同时这里用 useRoute() 读取 params，展示两种获取参数的方式。
-import { computed, onUnmounted, watch } from 'vue'
+import { computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { ElMessage } from 'element-plus'
@@ -18,6 +18,10 @@ const router = useRouter()
 
 const store = useProjectsStore()
 const { list } = storeToRefs(store)
+
+onMounted(() => {
+  store.fetchProjects()
+})
 
 // route 方式：useRoute() 返回当前路由对象，params 中保存动态片段
 const rawId = computed(() => route.params.id)

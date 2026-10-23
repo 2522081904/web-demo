@@ -5,7 +5,7 @@
 //   个人信息页（/profile）—— 完整资料 + 学习时间线 + 技能自评
 //   关于页（/about）      —— 站点说明、联系方式与所用技术
 // 两页读取的是同一个 profile Store，因此数据永远一致。
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useProfileStore } from '../stores/profile'
 import { useProjectsStore } from '../stores/projects'
@@ -20,6 +20,11 @@ const { total: projectTotal, techRanking } = storeToRefs(projectsStore)
 
 const articlesStore = useArticlesStore()
 const { total: articleTotal, totalViews } = storeToRefs(articlesStore)
+
+onMounted(() => {
+  projectsStore.fetchProjects()
+  articlesStore.fetchArticles()
+})
 
 // 站点使用的技术栈：作为 el-tag 列表展示，用于说明各实验阶段的成果
 const stack = [

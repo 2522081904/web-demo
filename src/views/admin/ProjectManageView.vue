@@ -4,7 +4,7 @@
 // 所有写操作都通过 projects Store 的 actions 完成，本页不直接修改 state：
 //   addProject / updateProject / removeProject / removeProjects / resetProjects
 // 新增与编辑共用同一个 el-dialog + el-form，通过 editing 状态区分模式。
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -15,6 +15,10 @@ const router = useRouter()
 
 const store = useProjectsStore()
 const { list, total, lastSavedAt } = storeToRefs(store)
+
+onMounted(() => {
+  store.fetchProjects()
+})
 
 const ui = useUiStore()
 
@@ -107,7 +111,7 @@ async function handleSubmit() {
     }
 
     if (editingId.value) {
-      store.updateProject(editingId.value, payload)
+      await store.updateProject(editingId.value, payload)
       ui.pushNotice({
         text: `项目「${payload.name}」已更新`,
         type: 'success',
@@ -115,7 +119,7 @@ async function handleSubmit() {
       })
       ElMessage.success(`项目「${payload.name}」已更新`)
     } else {
-      const id = store.addProject(payload)
+      const id = await store.addProject(payload)
       ui.pushNotice({
         text: `项目「${payload.name}」已新增，编号 #${id}`,
         type: 'success',
@@ -142,7 +146,7 @@ async function handleRemove(row) {
     return
   }
 
-  store.removeProject(row.id)
+  await store.removeProject(row.id)
   ui.pushNotice({
     text: `已删除项目「${row.name}」`,
     type: 'warning',
@@ -168,7 +172,7 @@ async function handleBatchRemove() {
     return
   }
 
-  const count = store.removeProjects(selectedRows.value.map((row) => row.id))
+  const count = await store.removeProjects(selectedRows.value.map((row) => row.id))
   selectedRows.value = []
   ui.pushNotice({ text: `批量删除了 ${count} 个项目`, type: 'warning', source: '项目管理页' })
   ElMessage.success(`已删除 ${count} 个项目`)
@@ -178,18 +182,18 @@ async function handleBatchRemove() {
 async function handleReset() {
   try {
     await ElMessageBox.confirm(
-      '将清除本地保存的项目数据，恢复为课程提供的初始 6 条记录。',
-      '确认恢复初始数据？',
+      '将从服务器重新加载项目数据（不会删除数据库记录）。',
+      '确认刷新数据？',
       { confirmButtonText: '恢复', cancelButtonText: '取消', type: 'warning' },
     )
   } catch {
     return
   }
 
-  store.resetProjects()
+  await store.resetProjects()
   selectedRows.value = []
-  ui.pushNotice({ text: '项目数据已恢复初始值', type: 'info', source: '项目管理页' })
-  ElMessage.info('已恢复初始项目数据')
+  ui.pushNotice({ text: '项目数据已从服务器刷新', type: 'info', source: '项目管理页' })
+  ElMessage.info('项目数据已刷新')
 }
 
 function handleSelectionChange(rows) {
@@ -222,7 +226,7 @@ function stateTagType(state) {
       </el-button>
 
       <el-button @click="handleReset">
-        <el-icon><RefreshLeft /></el-icon>&nbsp;恢复初始数据
+        <el-icon><RefreshLeft /></el-icon>&nbsp;刷新数据
       </el-button>
 
       <div class="spacer" />

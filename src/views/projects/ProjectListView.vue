@@ -3,7 +3,7 @@
 //
 // 筛选条件（状态、关键词）是「只有本页关心」的局部状态，因此用 ref 保存在组件内，
 // 而项目数据本身放在 Store 中共享——这是实验要求里「合理划分状态」的具体体现。
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useProjectsStore, STATE_OPTIONS } from '../../stores/projects'
@@ -12,6 +12,10 @@ import ProjectCard from '../../components/ProjectCard.vue'
 const router = useRouter()
 const store = useProjectsStore()
 const { list } = storeToRefs(store)
+
+onMounted(() => {
+  store.fetchProjects()
+})
 
 const filter = ref('全部')
 const keyword = ref('')

@@ -1,7 +1,7 @@
 <script setup>
 // 项目统计：父路由 /projects 下的子路由。
 // 所有统计结果都来自 Pinia getters，本页只负责展示——不重复计算任何指标。
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useProjectsStore, STATE_OPTIONS } from '../../stores/projects'
 
@@ -17,6 +17,10 @@ const {
   stateDistribution,
   topProjects,
 } = storeToRefs(store)
+
+onMounted(() => {
+  store.fetchProjects()
+})
 
 // 状态占比表格：el-progress 的百分比以总数为基础
 const stateRows = computed(() =>

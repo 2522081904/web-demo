@@ -4,7 +4,7 @@
 // 本页使用 el-table 以表格形式展示文章，配合分页、标签筛选与关键词搜索。
 // 「只看我的」开关演示了 getters 与筛选条件的组合：数据依然只有一份，
 // 不同的展示结果都由计算得出。
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useArticlesStore, ARTICLE_CATEGORIES } from '../../stores/articles'
@@ -12,6 +12,10 @@ import { useArticlesStore, ARTICLE_CATEGORIES } from '../../stores/articles'
 const router = useRouter()
 const store = useArticlesStore()
 const { publishedList, allTags } = storeToRefs(store)
+
+onMounted(() => {
+  store.fetchArticles()
+})
 
 // 筛选条件：只影响本页展示，不修改 Store 中的数据
 const keyword = ref('')
